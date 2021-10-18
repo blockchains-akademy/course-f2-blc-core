@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/course-f2-blc-core.iml" filepath="$PROJECT_DIR$/.idea/course-f2-blc-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../substrate-front-end-template/substrate-front-end-template.iml" filepath="$PROJECT_DIR$/../substrate-front-end-template/substrate-front-end-template.iml" />
+    </modules>
+  </component>
+</project>
