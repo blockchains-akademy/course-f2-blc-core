@@ -1,11 +1,13 @@
+use sc_cli::{ChainSpec, Role, RuntimeVersion, SubstrateCli};
+use sc_service::PartialComponents;
+
+use node_template_runtime::Block;
+
 use crate::{
 	chain_spec,
 	cli::{Cli, Subcommand},
 	service,
 };
-use node_template_runtime::Block;
-use sc_cli::{ChainSpec, Role, RuntimeVersion, SubstrateCli};
-use sc_service::PartialComponents;
 
 impl SubstrateCli for Cli {
 	fn impl_name() -> String {
@@ -55,7 +57,7 @@ pub fn run() -> sc_cli::Result<()> {
 		Some(Subcommand::BuildSpec(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.sync_run(|config| cmd.run(config.chain_spec, config.network))
-		},
+		}
 		Some(Subcommand::CheckBlock(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
@@ -63,21 +65,21 @@ pub fn run() -> sc_cli::Result<()> {
 					service::new_partial(&config)?;
 				Ok((cmd.run(client, import_queue), task_manager))
 			})
-		},
+		}
 		Some(Subcommand::ExportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
 				let PartialComponents { client, task_manager, .. } = service::new_partial(&config)?;
 				Ok((cmd.run(client, config.database), task_manager))
 			})
-		},
+		}
 		Some(Subcommand::ExportState(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
 				let PartialComponents { client, task_manager, .. } = service::new_partial(&config)?;
 				Ok((cmd.run(client, config.chain_spec), task_manager))
 			})
-		},
+		}
 		Some(Subcommand::ImportBlocks(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
@@ -85,11 +87,11 @@ pub fn run() -> sc_cli::Result<()> {
 					service::new_partial(&config)?;
 				Ok((cmd.run(client, import_queue), task_manager))
 			})
-		},
+		}
 		Some(Subcommand::PurgeChain(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.sync_run(|config| cmd.run(config.database))
-		},
+		}
 		Some(Subcommand::Revert(cmd)) => {
 			let runner = cli.create_runner(cmd)?;
 			runner.async_run(|config| {
@@ -97,7 +99,7 @@ pub fn run() -> sc_cli::Result<()> {
 					service::new_partial(&config)?;
 				Ok((cmd.run(client, backend), task_manager))
 			})
-		},
+		}
 		Some(Subcommand::Benchmark(cmd)) =>
 			if cfg!(feature = "runtime-benchmarks") {
 				let runner = cli.create_runner(cmd)?;
@@ -115,8 +117,8 @@ pub fn run() -> sc_cli::Result<()> {
 					Role::Light => service::new_light(config),
 					_ => service::new_full(config),
 				}
-				.map_err(sc_cli::Error::Service)
+					.map_err(sc_cli::Error::Service)
 			})
-		},
+		}
 	}
 }

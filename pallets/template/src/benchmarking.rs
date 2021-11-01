@@ -1,11 +1,12 @@
 //! Benchmarking setup for pallet-template
 
-use super::*;
+use frame_benchmarking::{benchmarks, impl_benchmark_test_suite, whitelisted_caller};
+use frame_system::RawOrigin;
 
 #[allow(unused)]
 use crate::Pallet as Template;
-use frame_benchmarking::{benchmarks, impl_benchmark_test_suite, whitelisted_caller};
-use frame_system::RawOrigin;
+
+use super::*;
 
 benchmarks! {
 	do_something {

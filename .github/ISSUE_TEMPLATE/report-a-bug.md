@@ -1,17 +1,13 @@
 ---
-name: Report a Bug
-about: Report a problem with this template.
-title: ""
-labels: bug
-assignees: ""
+name: Report a Bug about: Report a problem with this template. title: ""
+labels: bug assignees: ""
 ---
 
 **Description**
 
-_Tell us what happened. In particular, be specific about any changes you made to this template.
-Ideally, provide a link to your project's GitHub repository. Please note that we are not able to
-support all conceivable changes to this template project, but the more information you are able to
-provide the more equipped we will be to help._
+_Tell us what happened. In particular, be specific about any changes you made to this template. Ideally, provide a link
+to your project's GitHub repository. Please note that we are not able to support all conceivable changes to this
+template project, but the more information you are able to provide the more equipped we will be to help._
 
 **Steps to Reproduce**
 
@@ -24,13 +20,12 @@ _Replace the example steps below with actual steps to reproduce the bug you're r
 
 **Expected vs. Actual Behavior**
 
-_What did you expect to happen after you followed the steps you described in the last section? What
-actually happened?_
+_What did you expect to happen after you followed the steps you described in the last section? What actually happened?_
 
 **Environment**
 
-_Describe the environment in which you encountered this bug. Use the list below as a starting point
-and add additional information if you think it's relevant._
+_Describe the environment in which you encountered this bug. Use the list below as a starting point and add additional
+information if you think it's relevant._
 
 - Operating system:
 - Template version/tag:
@@ -38,8 +33,8 @@ and add additional information if you think it's relevant._
 
 **Logs, Errors or Screenshots**
 
-_Please provide the text of any logs or errors that you experienced; if
-applicable, provide screenshots to help illustrate the problem._
+_Please provide the text of any logs or errors that you experienced; if applicable, provide screenshots to help
+illustrate the problem._
 
 **Additional Information**
 
