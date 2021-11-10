@@ -1,190 +1,218 @@
-# Substrate Node Template
+# Substrate Frontier Node Template
 
-[![Try on playground](https://img.shields.io/badge/Playground-Node_Template-brightgreen?logo=Parity%20Substrate)](https://docs.substrate.io/playground/) [![Matrix](https://img.shields.io/matrix/substrate-technical:matrix.org)](https://matrix.to/#/#substrate-technical:matrix.org)
+A [FRAME](https://substrate.dev/docs/en/next/conceptual/runtime/frame)-based
+[Substrate](https://substrate.dev/en/) node with the Ethereum RPC support, ready for hacking
+:rocket:
 
-A fresh FRAME-based [Substrate](https://www.substrate.io/) node, ready for hacking :rocket:
+## Generation & Upstream
 
-## Getting Started
+This template is maintained in the
+[Frontier](https://github.com/paritytech/frontier/tree/master/template) project repository, and can
+be used to generate a stand-alone template for use in an independent project via the included
+[template generation script](https://github.com/paritytech/frontier/blob/master/docs/node-template-release.md).
 
-Follow the steps below to get started with the Node Template, or get it up and running right from your browser in just a
-few clicks using the [Substrate Playground](https://docs.substrate.io/playground/) :hammer_and_wrench:
+A ready-to-use template generated this way is hosted for each Frontier release on the
+[substrate-developer-hub/frontier-node-template](https://github.com/substrate-developer-hub/frontier-node-template)
+repository.
 
-### Using Nix
+This template was originally forked from the
+[Substrate Node Template](https://github.com/substrate-developer-hub/substrate-node-template). You
+can find more information on features on this template there, and more detailed usage on the
+[Substrate Developer Hub Tutorials](https://substrate.dev/tutorials/) that use this heavily.
 
-Install [nix](https://nixos.org/) and optionally [direnv](https://github.com/direnv/direnv) and
-[lorri](https://github.com/target/lorri) for a fully plug and play experience for setting up the development
-environment. To get all the correct dependencies activate direnv `direnv allow` and lorri `lorri shell`.
+## Build & Run
 
-### Rust Setup
+To build the chain, execute the following commands from the project root:
 
-First, complete the [basic Rust setup instructions](./docs/rust-setup.md).
-
-### Run
-
-Use Rust's native `cargo` command to build and launch the template node:
-
-```sh
-cargo run --release -- --dev --tmp
+```
+$ cargo build --release
 ```
 
-### Build
+To execute the chain, run:
 
-The `cargo run` command will perform an initial build. Use the following command to build the node without launching it:
-
-```sh
-cargo build --release
+```
+$ ./target/debug/frontier-template-node --dev
 ```
 
-### Embedded Docs
+The node also supports to use manual seal (to produce block manually through RPC).  
+This is also used by the ts-tests:
 
-Once the project has been built, the following command can be used to explore all parameters and subcommands:
-
-```sh
-./target/release/node-template -h
+```
+$ ./target/debug/frontier-template-node --dev --manual-seal
 ```
 
-## Run
+### Docker Based Development
 
-The provided `cargo run` command will launch a temporary node and its state will be discarded after you terminate the
-process. After the project has been built, there are other ways to launch the node.
+Optionally, You can build and run the frontier node within Docker directly.  
+The Dockerfile is optimized for development speed.  
+(Running the `docker run...` command will recompile the binaries but not the dependencies)
 
-### Single-Node Development Chain
-
-This command will start the single-node development chain with persistent state:
+Building (takes 5-10 min):
 
 ```bash
-./target/release/node-template --dev
+docker build -t frontier-node-dev .
 ```
 
-Purge the development chain's state:
+Running (takes 1 min to rebuild binaries):
 
 ```bash
-./target/release/node-template purge-chain --dev
+docker run -t frontier-node-dev
 ```
 
-Start the development chain with detailed logging:
+## Genesis Configuration
+
+The development [chain spec](node/src/chain_spec.rs) included with this project defines a genesis
+block that has been pre-configured with an EVM account for
+[Alice](https://substrate.dev/docs/en/knowledgebase/integrate/subkey#well-known-keys). When
+[a development chain is started](https://github.com/substrate-developer-hub/substrate-node-template#run),
+Alice's EVM account will be funded with a large amount of Ether. The
+[Polkadot UI](https://polkadot.js.org/apps/#?rpc=ws://127.0.0.1:9944) can be used to see the details
+of Alice's EVM account. In order to view an EVM account, use the `Developer` tab of the Polkadot UI
+`Settings` app to define the EVM `Account` type as below. It is also necessary to define the
+`Address` and `LookupSource` to send transaction, and `Transaction` and `Signature` to be able to
+inspect blocks:
+
+```json
+{
+	"Address": "MultiAddress",
+	"LookupSource": "MultiAddress",
+	"Account": {
+		"nonce": "U256",
+		"balance": "U256"
+	},
+	"Transaction": {
+		"nonce": "U256",
+		"action": "String",
+		"gas_price": "u64",
+		"gas_limit": "u64",
+		"value": "U256",
+		"input": "Vec<u8>",
+		"signature": "Signature"
+	},
+	"Signature": {
+		"v": "u64",
+		"r": "H256",
+		"s": "H256"
+	}
+}
+```
+
+Use the `Developer` app's `RPC calls` tab to query `eth > getBalance(address, number)` with Alice's
+EVM account ID (`0xd43593c715fdd31c61141abd04a99fd6822c8558`); the value that is returned should be:
+
+```text
+x: eth.getBalance
+340,282,366,920,938,463,463,374,607,431,768,211,455
+```
+
+> Further reading:
+> [EVM accounts](https://github.com/danforbes/danforbes/blob/master/writings/eth-dev.md#Accounts)
+
+Alice's EVM account ID was calculated using
+[an included utility script](utils/README.md#--evm-address-address).
+
+## Example 1: ERC20 Contract Deployment using EVM dispatchable
+
+The following steps are also available as a [Typescript script](examples/contract-erc20) using
+Polkadot JS SDK
+
+### Step 1: Contract creation
+
+The [`truffle`](examples/contract-erc20/truffle) directory contains a
+[Truffle](https://www.trufflesuite.com/truffle) project that defines
+[an ERC-20 token](examples/contract-erc20/truffle/contracts/MyToken.sol). For convenience, this
+repository also contains
+[the compiled bytecode of this token contract](examples/contract-erc20/truffle/contracts/MyToken.json#L259),
+which can be used to deploy it to the Substrate blockchain.
+
+> Further reading:
+> [the ERC-20 token standard](https://github.com/danforbes/danforbes/blob/master/writings/eth-dev.md#EIP-20-ERC-20-Token-Standard)
+
+Use the Polkadot UI `Extrinsics` app to deploy the contract from Alice's account (submit the
+extrinsic as a signed transaction) using `evm > create` with the following parameters:
+
+```
+source: 0xd43593c715fdd31c61141abd04a99fd6822c8558
+init: <raw contract bytecode, a very long hex value>
+value: 0
+gas_limit: 4294967295
+gas_price: 1
+nonce: <empty> {None}
+```
+
+The values for `gas_limit` and `gas_price` were chosen for convenience and have little inherent or
+special meaning. Note that `None` for the nonce will increment the known nonce for the source
+account, starting from `0x0`, you may manually set this but will get an "evm.InvalidNonce" error if
+not set correctly.
+
+Once the extrinsic is in a block, navigate to the `Network` -> `Explorer` tab in the UI, or open up
+the browser console to see that the EVM pallet has fired a `Created` event with an `address` field
+that provides the address of the newly-created contract:
 
 ```bash
-RUST_BACKTRACE=1 ./target/release/node-template -ldebug --dev
+# console:
+... {"phase":{"applyExtrinsic":2},"event":{"index":"0x0901","data":["0x8a50db1e0f9452cfd91be8dc004ceb11cb08832f"]} ...
+
+# UI:
+evm.Created
+A contract has been created at given [address]
+   H160: 0x8a50db1e0f9452cfd91be8dc004ceb11cb08832f
 ```
 
-### Connect with Polkadot-JS Apps Front-end
+In this case, however, it is trivial to
+[calculate this value](https://ethereum.stackexchange.com/a/46960):
+`0x8a50db1e0f9452cfd91be8dc004ceb11cb08832f`. That is because EVM contract account IDs are
+determined solely by the ID and nonce of the contract creator's account and, in this case, both of
+those values are well-known (`0xd43593c715fdd31c61141abd04a99fd6822c8558` and `0x0`, respectively).
 
-Once the node template is running locally, you can connect it with **Polkadot-JS Apps** front-end to interact with your
-chain. [Click here](https://polkadot.js.org/apps/#/explorer?rpc=ws://localhost:9944) connecting the Apps to your local
-node template.
+### Step 2: Check Contract Storage
 
-### Multi-Node Local Testnet
+Use the `Chain State` UI tab to query`evm > accountCodes` for both Alice's and the contract's
+account IDs; notice that Alice's account code is empty and the contract's is equal to the bytecode
+of the Solidity contract.
 
-If you want to see the multi-node consensus algorithm in action, refer to our
-[Start a Private Network tutorial](https://docs.substrate.io/tutorials/v3/private-network).
+The ERC-20 contract that was deployed inherits from
+[the OpenZeppelin ERC-20 implementation](https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol)
+and extends its capabilities by adding
+[a constructor that mints a maximum amount of tokens to the contract creator](examples/contract-erc20/truffle/contracts/MyToken.sol#L8).
+Use the `Chain State` app to query `evm > accountStorage` and view the value associated with Alice's
+account in the `_balances` map of the ERC-20 contract; use the ERC-20 contract address
+(`0x8a50db1e0f9452cfd91be8dc004ceb11cb08832f`) as the first parameter and the storage slot to read
+as the second parameter (`0x045c0350b9cf0df39c4b40400c965118df2dca5ce0fbcf0de4aafc099aea4a14`). The
+value that is returned should be
+`0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff`.
 
-## Template Structure
+The storage slot was calculated using
+[a provided utility](utils/README.md#--erc20-slot-slot-address). (Slot 0 and alice address:
+`0xd43593c715fdd31c61141abd04a99fd6822c8558`)
 
-A Substrate project such as this consists of a number of components that are spread across a few directories.
+> Further reading:
+> [EVM layout of state variables in storage](https://solidity.readthedocs.io/en/latest/miscellaneous.html#layout-of-state-variables-in-storage)
 
-### Node
+### Step 3: Contract Usage
 
-A blockchain node is an application that allows users to participate in a blockchain network. Substrate-based blockchain
-nodes expose a number of capabilities:
+Use the `Developer` -> `Extrinsics` tab to invoke the `transfer(address, uint256)` function on the
+ERC-20 contract with `evm > call` and transfer some of the ERC-20 tokens from Alice to Bob.
 
-- Networking: Substrate nodes use the [`libp2p`](https://libp2p.io/) networking stack to allow the nodes in the network
-  to communicate with one another.
-- Consensus: Blockchains must have a way to come to
-  [consensus](https://docs.substrate.io/v3/advanced/consensus) on the state of the network. Substrate makes it possible
-  to supply custom consensus engines and also ships with several consensus mechanisms that have been built on top of
-  [Web3 Foundation research](https://research.web3.foundation/en/latest/polkadot/NPoS/index.html).
-- RPC Server: A remote procedure call (RPC) server is used to interact with Substrate nodes.
-
-There are several files in the `node` directory - take special note of the following:
-
-- [`chain_spec.rs`](./node/src/chain_spec.rs): A
-  [chain specification](https://docs.substrate.io/v3/runtime/chain-specs) is a source code file that defines a Substrate
-  chain's initial (genesis) state. Chain specifications are useful for development and testing, and critical when
-  architecting the launch of a production chain. Take note of the `development_config` and `testnet_genesis` functions,
-  which are used to define the genesis state for the local development chain configuration. These functions identify
-  some
-  [well-known accounts](https://docs.substrate.io/v3/tools/subkey#well-known-keys)
-  and use them to configure the blockchain's initial state.
-- [`service.rs`](./node/src/service.rs): This file defines the node implementation. Take note of the libraries that this
-  file imports and the names of the functions it invokes. In particular, there are references to consensus-related
-  topics, such as the
-  [longest chain rule](https://docs.substrate.io/v3/advanced/consensus#longest-chain-rule),
-  the [Aura](https://docs.substrate.io/v3/advanced/consensus#aura) block authoring mechanism and the
-  [GRANDPA](https://docs.substrate.io/v3/advanced/consensus#grandpa) finality gadget.
-
-After the node has been [built](#build), refer to the embedded documentation to learn more about the capabilities and
-configuration parameters that it exposes:
-
-```shell
-./target/release/node-template --help
+```text
+target: 0x8a50db1e0f9452cfd91be8dc004ceb11cb08832f
+source: 0xd43593c715fdd31c61141abd04a99fd6822c8558
+input: 0xa9059cbb0000000000000000000000008eaf04151687736326c9fea17e25fc528761369300000000000000000000000000000000000000000000000000000000000000dd
+value: 0
+gas_limit: 4294967295
+gas_price: 1
 ```
 
-### Runtime
+The value of the `input` parameter is an EVM ABI-encoded function call that was calculated using
+[the Remix web IDE](http://remix.ethereum.org); it consists of a function selector (`0xa9059cbb`)
+and the arguments to be used for the function invocation. In this case, the arguments correspond to
+Bob's EVM account ID (`0x8eaf04151687736326c9fea17e25fc5287613693`) and the number of tokens to be
+transferred (`0xdd`, or 221 in hex).
 
-In Substrate, the terms
-"[runtime](https://docs.substrate.io/v3/getting-started/glossary#runtime)" and
-"[state transition function](https://docs.substrate.io/v3/getting-started/glossary#state-transition-function-stf)"
-are analogous - they refer to the core logic of the blockchain that is responsible for validating blocks and executing
-the state changes they define. The Substrate project in this repository uses
-the [FRAME](https://docs.substrate.io/v3/runtime/frame) framework to construct a blockchain runtime. FRAME allows
-runtime developers to declare domain-specific logic in modules called "pallets". At the heart of FRAME is a helpful
-[macro language](https://docs.substrate.io/v3/runtime/macros) that makes it easy to create pallets and flexibly compose
-them to create blockchains that can address
-[a variety of needs](https://www.substrate.io/substrate-users/).
+> Further reading:
+> [the EVM ABI specification](https://solidity.readthedocs.io/en/latest/abi-spec.html)
 
-Review the [FRAME runtime implementation](./runtime/src/lib.rs) included in this template and note the following:
+### Step 4: Check Bob Contract Storage
 
-- This file configures several pallets to include in the runtime. Each pallet configuration is defined by a code block
-  that begins with `impl $PALLET_NAME::Config for Runtime`.
-- The pallets are composed into a single runtime by way of the
-  [`construct_runtime!`](https://crates.parity.io/frame_support/macro.construct_runtime.html)
-  macro, which is part of the core
-  [FRAME Support](https://docs.substrate.io/v3/runtime/frame#support-crate)
-  library.
-
-### Pallets
-
-The runtime in this project is constructed using many FRAME pallets that ship with the
-[core Substrate repository](https://github.com/paritytech/substrate/tree/master/frame) and a template pallet that
-is [defined in the `pallets`](./pallets/template/src/lib.rs) directory.
-
-A FRAME pallet is compromised of a number of blockchain primitives:
-
-- Storage: FRAME defines a rich set of powerful
-  [storage abstractions](https://docs.substrate.io/v3/runtime/storage) that makes it easy to use Substrate's efficient
-  key-value database to manage the evolving state of a blockchain.
-- Dispatchables: FRAME pallets define special types of functions that can be invoked (dispatched)
-  from outside of the runtime in order to update its state.
-- Events: Substrate uses [events and errors](https://docs.substrate.io/v3/runtime/events-and-errors)
-  to notify users of important changes in the runtime.
-- Errors: When a dispatchable fails, it returns an error.
-- Config: The `Config` configuration interface is used to define the types and parameters upon which a FRAME pallet
-  depends.
-
-### Run in Docker
-
-First, install [Docker](https://docs.docker.com/get-docker/) and
-[Docker Compose](https://docs.docker.com/compose/install/).
-
-Then run the following command to start a single node development chain.
-
-```bash
-./scripts/docker_run.sh
-```
-
-This command will firstly compile your code, and then start a local development network. You can also replace the
-default command
-(`cargo build --release && ./target/release/node-template --dev --ws-external`)
-by appending your own. A few useful ones are as follow.
-
-```bash
-# Run Substrate node without re-compiling
-./scripts/docker_run.sh ./target/release/node-template --dev --ws-external
-
-# Purge the local dev chain
-./scripts/docker_run.sh ./target/release/node-template purge-chain --dev
-
-# Check whether the code is compilable
-./scripts/docker_run.sh cargo check
-```
+After the extrinsic has finalized, use the `Chain State` app to query `evm > accountStorage` to see
+the ERC-20 balances for both Alice and Bob.
