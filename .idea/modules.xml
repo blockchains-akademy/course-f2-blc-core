@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/course-f2-blc-core.iml" filepath="$PROJECT_DIR$/.idea/course-f2-blc-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/../frontier/frontier.iml" filepath="$PROJECT_DIR$/../frontier/frontier.iml" />
       <module fileurl="file://$PROJECT_DIR$/../substrate-front-end-template/substrate-front-end-template.iml" filepath="$PROJECT_DIR$/../substrate-front-end-template/substrate-front-end-template.iml" />
       <module fileurl="file://$PROJECT_DIR$/../substrate-node-template/substrate-node-template.iml" filepath="$PROJECT_DIR$/../substrate-node-template/substrate-node-template.iml" />
